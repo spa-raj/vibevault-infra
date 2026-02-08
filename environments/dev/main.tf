@@ -1,3 +1,7 @@
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 module "vpc" {
   source = "../../modules/vpc"
 
@@ -5,5 +9,5 @@ module "vpc" {
   environment        = var.environment
   project_name       = "vibevault"
   cluster_name       = "vibevault-${var.environment}"
-  availability_zones = ["${var.aws_region}a", "${var.aws_region}b"]
+  availability_zones = slice(data.aws_availability_zones.available.names, 0, 2)
 }
