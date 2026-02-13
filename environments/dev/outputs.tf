@@ -34,3 +34,30 @@ output "eks_oidc_provider_arn" {
   description = "ARN of the OIDC provider for IRSA"
   value       = module.eks.oidc_provider_arn
 }
+
+# RDS Outputs
+
+output "rds_endpoint" {
+  description = "Connection endpoint of the RDS instance"
+  value       = module.rds.db_instance_endpoint
+}
+
+output "rds_address" {
+  description = "Hostname of the RDS instance"
+  value       = module.rds.db_instance_address
+}
+
+output "rds_port" {
+  description = "Port of the RDS instance"
+  value       = module.rds.db_instance_port
+}
+
+output "rds_db_name" {
+  description = "Name of the default database"
+  value       = module.rds.db_name
+}
+
+output "rds_master_user_secret_arn" {
+  description = "ARN of the Secrets Manager secret containing the RDS master password"
+  value       = module.rds.master_user_secret_arn
+}
