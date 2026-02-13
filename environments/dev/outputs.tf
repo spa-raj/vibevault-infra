@@ -61,3 +61,10 @@ output "rds_master_user_secret_arn" {
   description = "ARN of the Secrets Manager secret containing the RDS master password"
   value       = module.rds.master_user_secret_arn
 }
+
+# ECR Outputs
+
+output "ecr_repository_urls" {
+  description = "Map of service name to ECR repository URL"
+  value       = module.ecr.repository_urls
+}
