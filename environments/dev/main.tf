@@ -58,3 +58,9 @@ module "rds" {
   skip_final_snapshot     = true
   log_retention_days      = 7
 }
+
+module "ecr" {
+  source       = "../../modules/ecr"
+  environment  = var.environment
+  project_name = "vibevault"
+}
