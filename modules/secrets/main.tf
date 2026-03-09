@@ -5,6 +5,17 @@ locals {
   }
 
   prefix = "${var.project_name}/${var.environment}"
+
+  db_services = {
+    userservice = {
+      username = "userservice_user"
+      password = random_password.userservice_db.result
+    }
+    productservice = {
+      username = "productservice_user"
+      password = random_password.productservice_db.result
+    }
+  }
 }
 
 # ------------------------------------------------------------------------------
@@ -97,4 +108,28 @@ resource "aws_secretsmanager_secret_version" "userservice_app" {
     ADMIN_PASSWORD = random_password.userservice_admin.result
     CLIENT_SECRET  = random_password.userservice_client_secret.result
   })
+}
+
+# ------------------------------------------------------------------------------
+# MySQL Databases and Users — least-privilege per microservice
+# ------------------------------------------------------------------------------
+
+resource "mysql_database" "service" {
+  for_each = local.db_services
+  name     = each.key
+}
+
+resource "mysql_user" "service" {
+  for_each           = local.db_services
+  user               = each.value.username
+  host               = "%"
+  plaintext_password = each.value.password
+}
+
+resource "mysql_grant" "service" {
+  for_each   = local.db_services
+  user       = mysql_user.service[each.key].user
+  host       = mysql_user.service[each.key].host
+  database   = mysql_database.service[each.key].name
+  privileges = ["SELECT", "INSERT", "UPDATE", "DELETE", "CREATE", "ALTER", "INDEX", "DROP"]
 }
