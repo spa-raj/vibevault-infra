@@ -1,0 +1,61 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-init
+  namespace: vibevault
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: db-init
+          image: mysql:8.0
+          command:
+            - sh
+            - -c
+            - |
+              mysql -h "$RDS_HOST" -P "$RDS_PORT" -u "$MASTER_USERNAME" -p"$MASTER_PASSWORD" -e "
+                CREATE DATABASE IF NOT EXISTS userservice;
+                CREATE DATABASE IF NOT EXISTS productservice;
+
+                CREATE USER IF NOT EXISTS 'userservice_user'@'%' IDENTIFIED BY '$USERSERVICE_DB_PASSWORD';
+                GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, INDEX, DROP ON userservice.* TO 'userservice_user'@'%';
+
+                CREATE USER IF NOT EXISTS 'productservice_user'@'%' IDENTIFIED BY '$PRODUCTSERVICE_DB_PASSWORD';
+                GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, INDEX, DROP ON productservice.* TO 'productservice_user'@'%';
+
+                FLUSH PRIVILEGES;
+              "
+          env:
+            - name: RDS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: db-init-config
+                  key: RDS_HOST
+            - name: RDS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: db-init-config
+                  key: RDS_PORT
+            - name: MASTER_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-init-master-secret
+                  key: username
+            - name: MASTER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-init-master-secret
+                  key: password
+            - name: USERSERVICE_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-init-service-secrets
+                  key: userservice_password
+            - name: PRODUCTSERVICE_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-init-service-secrets
+                  key: productservice_password
