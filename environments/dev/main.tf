@@ -30,6 +30,9 @@ module "eks" {
 
   endpoint_public_access_cidrs     = ["0.0.0.0/0"]
   control_plane_log_retention_days = 7
+
+  secret_arns          = module.secrets.all_secret_arns
+  secrets_kms_key_arns = [module.rds.kms_key_arn]
 }
 
 module "rds" {
@@ -57,6 +60,14 @@ module "rds" {
   deletion_protection     = false
   skip_final_snapshot     = true
   log_retention_days      = 7
+}
+
+module "secrets" {
+  source = "../../modules/secrets"
+
+  environment  = var.environment
+  project_name = "vibevault"
+  kms_key_arn  = module.rds.kms_key_arn
 }
 
 module "ecr" {

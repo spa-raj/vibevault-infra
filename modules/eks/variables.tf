@@ -86,6 +86,18 @@ variable "endpoint_public_access_cidrs" {
   default     = ["0.0.0.0/0"]
 }
 
+variable "secret_arns" {
+  description = "List of Secrets Manager secret ARNs that External Secrets Operator can access"
+  type        = list(string)
+  default     = []
+}
+
+variable "secrets_kms_key_arns" {
+  description = "List of KMS key ARNs used to encrypt the secrets"
+  type        = list(string)
+  default     = []
+}
+
 variable "control_plane_log_retention_days" {
   description = "Number of days to retain EKS control plane logs in CloudWatch"
   type        = number
