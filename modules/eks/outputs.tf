@@ -52,3 +52,8 @@ output "kms_key_arn" {
   description = "ARN of the KMS key used for EKS secrets encryption"
   value       = aws_kms_key.eks.arn
 }
+
+output "external_secrets_role_arn" {
+  description = "ARN of the IRSA role for External Secrets Operator"
+  value       = aws_iam_role.external_secrets.arn
+}

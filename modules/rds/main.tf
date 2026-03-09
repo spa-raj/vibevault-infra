@@ -67,7 +67,7 @@ resource "aws_db_instance" "main" {
   port     = var.port
 
   # Secrets Manager manages the master password (never stored in Terraform state)
-  manage_master_user_password = true
+  manage_master_user_password   = true
   master_user_secret_kms_key_id = aws_kms_key.rds.arn
 
   multi_az               = var.multi_az
@@ -82,9 +82,9 @@ resource "aws_db_instance" "main" {
 
   enabled_cloudwatch_logs_exports = ["error", "slowquery"]
 
-  copy_tags_to_snapshot    = true
-  deletion_protection      = var.deletion_protection
-  skip_final_snapshot      = var.skip_final_snapshot
+  copy_tags_to_snapshot     = true
+  deletion_protection       = var.deletion_protection
+  skip_final_snapshot       = var.skip_final_snapshot
   final_snapshot_identifier = var.skip_final_snapshot ? null : "${local.identifier}-final-snapshot"
 
   tags = merge(local.common_tags, {

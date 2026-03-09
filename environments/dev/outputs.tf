@@ -62,6 +62,28 @@ output "rds_master_user_secret_arn" {
   value       = module.rds.master_user_secret_arn
 }
 
+# Secrets Manager Outputs
+
+output "secrets_userservice_db_arn" {
+  description = "ARN of the userservice DB credentials secret"
+  value       = module.secrets.userservice_db_secret_arn
+}
+
+output "secrets_productservice_db_arn" {
+  description = "ARN of the productservice DB credentials secret"
+  value       = module.secrets.productservice_db_secret_arn
+}
+
+output "secrets_userservice_app_arn" {
+  description = "ARN of the userservice app secrets"
+  value       = module.secrets.userservice_app_secret_arn
+}
+
+output "external_secrets_role_arn" {
+  description = "ARN of the IRSA role for External Secrets Operator"
+  value       = module.eks.external_secrets_role_arn
+}
+
 # ECR Outputs
 
 output "ecr_repository_urls" {
