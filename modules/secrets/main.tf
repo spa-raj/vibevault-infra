@@ -35,6 +35,15 @@ resource "random_password" "userservice_client_secret" {
 }
 
 # ------------------------------------------------------------------------------
+# RSA Key Pair for JWT Signing (persisted across pod restarts)
+# ------------------------------------------------------------------------------
+
+resource "tls_private_key" "jwt_signing" {
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
+
+# ------------------------------------------------------------------------------
 # Userservice DB Credentials
 # ------------------------------------------------------------------------------
 
@@ -98,8 +107,10 @@ resource "aws_secretsmanager_secret" "userservice_app" {
 resource "aws_secretsmanager_secret_version" "userservice_app" {
   secret_id = aws_secretsmanager_secret.userservice_app.id
   secret_string = jsonencode({
-    ADMIN_PASSWORD = random_password.userservice_admin.result
-    CLIENT_SECRET  = random_password.userservice_client_secret.result
+    ADMIN_PASSWORD  = random_password.userservice_admin.result
+    CLIENT_SECRET   = random_password.userservice_client_secret.result
+    RSA_PRIVATE_KEY = tls_private_key.jwt_signing.private_key_pem
+    RSA_PUBLIC_KEY  = tls_private_key.jwt_signing.public_key_pem
   })
 }
 
