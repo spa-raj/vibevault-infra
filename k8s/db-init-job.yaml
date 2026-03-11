@@ -25,7 +25,7 @@ spec:
             - -c
             - |
               export MYSQL_PWD="$MASTER_PASSWORD"
-              printf 'CREATE DATABASE IF NOT EXISTS userservice;\nCREATE DATABASE IF NOT EXISTS productservice;\nCREATE USER IF NOT EXISTS '\''userservice_user'\''@'\''%%'\'' IDENTIFIED BY '\''%s'\'';\nGRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, INDEX, DROP ON userservice.* TO '\''userservice_user'\''@'\''%%'\'';\nCREATE USER IF NOT EXISTS '\''productservice_user'\''@'\''%%'\'' IDENTIFIED BY '\''%s'\'';\nGRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, INDEX, DROP ON productservice.* TO '\''productservice_user'\''@'\''%%'\'';\nFLUSH PRIVILEGES;\n' \
+              printf 'CREATE DATABASE IF NOT EXISTS userservice;\nCREATE DATABASE IF NOT EXISTS productservice;\nCREATE USER IF NOT EXISTS '\''userservice_user'\''@'\''%%'\'' IDENTIFIED BY '\''%s'\'';\nGRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, INDEX, DROP, REFERENCES ON userservice.* TO '\''userservice_user'\''@'\''%%'\'';\nCREATE USER IF NOT EXISTS '\''productservice_user'\''@'\''%%'\'' IDENTIFIED BY '\''%s'\'';\nGRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, INDEX, DROP, REFERENCES ON productservice.* TO '\''productservice_user'\''@'\''%%'\'';\nFLUSH PRIVILEGES;\n' \
                 "$USERSERVICE_DB_PASSWORD" \
                 "$PRODUCTSERVICE_DB_PASSWORD" \
               | mysql -h "$RDS_HOST" -P "$RDS_PORT" -u "$MASTER_USERNAME"
