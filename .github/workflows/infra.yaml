@@ -172,8 +172,8 @@ jobs:
 
           # Wait for ExternalSecrets to sync
           echo "Waiting for ExternalSecrets to sync..."
-          kubectl wait externalsecret/db-init-master-secret -n vibevault --for=condition=SecretSynced --timeout=60s
-          kubectl wait externalsecret/db-init-service-secrets -n vibevault --for=condition=SecretSynced --timeout=60s
+          kubectl wait externalsecret/db-init-master-secret -n vibevault --for=condition=Ready --timeout=60s
+          kubectl wait externalsecret/db-init-service-secrets -n vibevault --for=condition=Ready --timeout=60s
 
           # Run the DB init job (delete previous run if exists)
           kubectl delete job db-init -n vibevault --ignore-not-found
