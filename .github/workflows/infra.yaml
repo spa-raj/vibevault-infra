@@ -27,6 +27,7 @@ env:
   AWS_REGION: ap-south-1
   TF_VERSION: "1.14.6"
   EKS_CLUSTER_NAME: vibevault-${{ inputs.environment }}
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   terraform:
