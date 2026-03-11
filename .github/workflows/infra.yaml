@@ -1,0 +1,109 @@
+name: Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Action to perform"
+        required: true
+        type: choice
+        options:
+          - plan
+          - apply
+          - destroy
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - dev
+        default: dev
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-south-1
+  TF_VERSION: "1.14.6"
+
+jobs:
+  terraform:
+    name: "Terraform ${{ inputs.action }} (${{ inputs.environment }})"
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    defaults:
+      run:
+        working-directory: environments/${{ inputs.environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      # ---------- PLAN ----------
+      - name: "Plan: Stage 1 — VPC + ECR"
+        if: inputs.action == 'plan'
+        run: terraform plan -target=module.vpc -target=module.ecr
+
+      - name: "Plan: Stage 2 — EKS"
+        if: inputs.action == 'plan'
+        run: terraform plan -target=module.eks
+
+      - name: "Plan: Stage 3 — RDS + Secrets"
+        if: inputs.action == 'plan'
+        run: terraform plan -target=module.rds -target=module.secrets
+
+      - name: "Plan: Stage 4 — Full (remaining refs)"
+        if: inputs.action == 'plan'
+        run: terraform plan
+
+      # ---------- APPLY (staged to break circular deps) ----------
+      # VPC + ECR have no dependencies
+      - name: "Apply: Stage 1 — VPC + ECR"
+        if: inputs.action == 'apply'
+        run: terraform apply -auto-approve -target=module.vpc -target=module.ecr
+
+      # EKS needs VPC outputs; creates cluster_security_group_id needed by RDS
+      - name: "Apply: Stage 2 — EKS"
+        if: inputs.action == 'apply'
+        run: terraform apply -auto-approve -target=module.eks
+
+      # RDS needs EKS security group; Secrets needs RDS KMS key
+      - name: "Apply: Stage 3 — RDS + Secrets"
+        if: inputs.action == 'apply'
+        run: terraform apply -auto-approve -target=module.rds -target=module.secrets
+
+      # Final pass wires cross-module refs (EKS IRSA ↔ RDS/Secrets ARNs)
+      - name: "Apply: Stage 4 — Full (wire cross-module refs)"
+        if: inputs.action == 'apply'
+        run: terraform apply -auto-approve
+
+      # ---------- DESTROY (reverse order) ----------
+      - name: "Destroy: Stage 1 — EKS"
+        if: inputs.action == 'destroy'
+        run: terraform destroy -auto-approve -target=module.eks
+
+      - name: "Destroy: Stage 2 — RDS + Secrets"
+        if: inputs.action == 'destroy'
+        run: terraform destroy -auto-approve -target=module.rds -target=module.secrets
+
+      - name: "Destroy: Stage 3 — VPC + ECR"
+        if: inputs.action == 'destroy'
+        run: terraform destroy -auto-approve -target=module.vpc -target=module.ecr

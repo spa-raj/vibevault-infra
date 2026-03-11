@@ -82,3 +82,79 @@ resource "aws_dynamodb_table" "terraform_locks" {
     Purpose = "Terraform state locking"
   }
 }
+
+# ------------------------------------------------------------------------------
+# GitHub OIDC Provider — lets GitHub Actions assume IAM roles without secrets
+# ------------------------------------------------------------------------------
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_iam_openid_connect_provider" "github" {
+  url             = "https://token.actions.githubusercontent.com"
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = ["ffffffffffffffffffffffffffffffffffffffff"]
+
+  tags = {
+    Name    = "github-oidc"
+    Project = "vibevault"
+  }
+}
+
+# ------------------------------------------------------------------------------
+# IAM Role assumed by GitHub Actions via OIDC
+# ------------------------------------------------------------------------------
+
+variable "github_repos" {
+  description = "GitHub repos allowed to assume the CI/CD role"
+  type        = list(string)
+  default = [
+    "spa-raj/vibevault-infra",
+    "spa-raj/userservice",
+    "spa-raj/productservice",
+  ]
+}
+
+data "aws_iam_policy_document" "github_actions_trust" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = [aws_iam_openid_connect_provider.github.arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringLike"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = [for repo in var.github_repos : "repo:${repo}:*"]
+    }
+  }
+}
+
+resource "aws_iam_role" "github_actions" {
+  name               = "vibevault-github-actions"
+  assume_role_policy = data.aws_iam_policy_document.github_actions_trust.json
+
+  tags = {
+    Name    = "vibevault-github-actions"
+    Project = "vibevault"
+    Purpose = "GitHub Actions CI/CD"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "github_actions_admin" {
+  role       = aws_iam_role.github_actions.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+}
+
+output "github_actions_role_arn" {
+  description = "ARN to set as AWS_ROLE_ARN secret in all GitHub repos"
+  value       = aws_iam_role.github_actions.arn
+}
