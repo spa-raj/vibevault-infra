@@ -133,6 +133,20 @@ jobs:
       - name: Create vibevault namespace
         run: kubectl create namespace vibevault --dry-run=client -o yaml | kubectl apply -f -
 
+      - name: Install External Secrets Operator
+        run: |
+          # Get AWS account ID for IRSA role ARN
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          ESO_ROLE_ARN="arn:aws:iam::${ACCOUNT_ID}:role/${{ env.EKS_CLUSTER_NAME }}-external-secrets-role"
+
+          helm repo add external-secrets https://charts.external-secrets.io
+          helm repo update
+
+          helm upgrade --install external-secrets external-secrets/external-secrets \
+            -n external-secrets --create-namespace \
+            --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"="${ESO_ROLE_ARN}" \
+            --wait --timeout 120s
+
       - name: Resolve REPLACE_ placeholders and apply K8s manifests
         run: |
           # Query RDS for dynamic values
