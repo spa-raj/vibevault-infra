@@ -119,6 +119,36 @@ resource "aws_eks_node_group" "main" {
 # OIDC Provider for IRSA (IAM Roles for Service Accounts)
 # ------------------------------------------------------------------------------
 
+# ------------------------------------------------------------------------------
+# EKS Access Entry for GitHub Actions CI/CD Role
+# ------------------------------------------------------------------------------
+
+resource "aws_eks_access_entry" "ci_cd" {
+  count         = var.ci_cd_role_arn != "" ? 1 : 0
+  cluster_name  = aws_eks_cluster.main.name
+  principal_arn = var.ci_cd_role_arn
+  type          = "STANDARD"
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_name}-${var.environment}-cicd-access"
+  })
+}
+
+resource "aws_eks_access_policy_association" "ci_cd_admin" {
+  count         = var.ci_cd_role_arn != "" ? 1 : 0
+  cluster_name  = aws_eks_cluster.main.name
+  principal_arn = var.ci_cd_role_arn
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+
+  access_scope {
+    type = "cluster"
+  }
+}
+
+# ------------------------------------------------------------------------------
+# OIDC Provider for IRSA (IAM Roles for Service Accounts)
+# ------------------------------------------------------------------------------
+
 data "tls_certificate" "eks" {
   url = aws_eks_cluster.main.identity[0].oidc[0].issuer
 }

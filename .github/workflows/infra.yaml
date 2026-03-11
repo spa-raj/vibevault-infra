@@ -26,6 +26,7 @@ permissions:
 env:
   AWS_REGION: ap-south-1
   TF_VERSION: "1.14.6"
+  EKS_CLUSTER_NAME: vibevault-${{ inputs.environment }}
 
 jobs:
   terraform:
@@ -107,3 +108,63 @@ jobs:
       - name: "Destroy: Stage 3 — VPC + ECR"
         if: inputs.action == 'destroy'
         run: terraform destroy -auto-approve -target=module.vpc -target=module.ecr
+
+  # ---------- POST-APPLY: Configure K8s resources ----------
+  post-apply:
+    name: "Configure Kubernetes"
+    needs: terraform
+    if: inputs.action == 'apply'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Configure kubectl
+        run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
+      - name: Create vibevault namespace
+        run: kubectl create namespace vibevault --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Resolve REPLACE_ placeholders and apply K8s manifests
+        run: |
+          # Query RDS for dynamic values
+          RDS_ADDRESS=$(aws rds describe-db-instances \
+            --db-instance-identifier ${{ env.EKS_CLUSTER_NAME }}-mysql \
+            --query 'DBInstances[0].Endpoint.Address' --output text)
+
+          RDS_MASTER_SECRET_ARN=$(aws rds describe-db-instances \
+            --db-instance-identifier ${{ env.EKS_CLUSTER_NAME }}-mysql \
+            --query 'DBInstances[0].MasterUserSecret.SecretArn' --output text)
+
+          echo "RDS Address: $RDS_ADDRESS"
+          echo "RDS Master Secret ARN: $RDS_MASTER_SECRET_ARN"
+
+          # Apply ClusterSecretStore
+          kubectl apply -f k8s/cluster-secret-store.yaml
+
+          # Apply db-init ExternalSecrets with placeholders resolved
+          sed \
+            -e "s|REPLACE_WITH_RDS_ADDRESS|${RDS_ADDRESS}|g" \
+            -e "s|REPLACE_WITH_RDS_MASTER_SECRET_ARN|${RDS_MASTER_SECRET_ARN}|g" \
+            k8s/db-init-external-secrets.yaml | kubectl apply -f -
+
+          # Wait for ExternalSecrets to sync
+          echo "Waiting for ExternalSecrets to sync..."
+          kubectl wait externalsecret/db-init-master-secret -n vibevault --for=condition=SecretSynced --timeout=60s
+          kubectl wait externalsecret/db-init-service-secrets -n vibevault --for=condition=SecretSynced --timeout=60s
+
+          # Run the DB init job (delete previous run if exists)
+          kubectl delete job db-init -n vibevault --ignore-not-found
+          kubectl apply -f k8s/db-init-job.yaml
+
+          # Wait for job completion
+          kubectl wait job/db-init -n vibevault --for=condition=complete --timeout=120s
+          echo "DB init job completed successfully"

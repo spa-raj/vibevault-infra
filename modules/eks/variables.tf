@@ -98,6 +98,12 @@ variable "secrets_kms_key_arns" {
   default     = []
 }
 
+variable "ci_cd_role_arn" {
+  description = "IAM role ARN for GitHub Actions CI/CD to access the EKS cluster"
+  type        = string
+  default     = ""
+}
+
 variable "control_plane_log_retention_days" {
   description = "Number of days to retain EKS control plane logs in CloudWatch"
   type        = number
