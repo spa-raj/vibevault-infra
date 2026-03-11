@@ -62,6 +62,10 @@ resource "aws_eks_cluster" "main" {
     security_group_ids      = [aws_security_group.cluster_additional.id]
   }
 
+  access_config {
+    authentication_mode = "API_AND_CONFIG_MAP"
+  }
+
   enabled_cluster_log_types = local.cluster_log_types
 
   encryption_config {
