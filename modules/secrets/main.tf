@@ -48,9 +48,10 @@ resource "tls_private_key" "jwt_signing" {
 # ------------------------------------------------------------------------------
 
 resource "aws_secretsmanager_secret" "userservice_db" {
-  name        = "${local.prefix}/userservice/db-credentials"
-  description = "Database credentials for userservice"
-  kms_key_id  = var.kms_key_arn
+  name                    = "${local.prefix}/userservice/db-credentials"
+  description             = "Database credentials for userservice"
+  kms_key_id              = var.kms_key_arn
+  recovery_window_in_days = 0
 
   tags = merge(local.common_tags, {
     Service = "userservice"
@@ -70,9 +71,10 @@ resource "aws_secretsmanager_secret_version" "userservice_db" {
 # ------------------------------------------------------------------------------
 
 resource "aws_secretsmanager_secret" "productservice_db" {
-  name        = "${local.prefix}/productservice/db-credentials"
-  description = "Database credentials for productservice"
-  kms_key_id  = var.kms_key_arn
+  name                    = "${local.prefix}/productservice/db-credentials"
+  description             = "Database credentials for productservice"
+  kms_key_id              = var.kms_key_arn
+  recovery_window_in_days = 0
 
   tags = merge(local.common_tags, {
     Service = "productservice"
@@ -92,9 +94,10 @@ resource "aws_secretsmanager_secret_version" "productservice_db" {
 # ------------------------------------------------------------------------------
 
 resource "aws_secretsmanager_secret" "userservice_app" {
-  name        = "${local.prefix}/userservice/app-secrets"
-  description = "Application secrets for userservice (admin password, OAuth client secret)"
-  kms_key_id  = var.kms_key_arn
+  name                    = "${local.prefix}/userservice/app-secrets"
+  description             = "Application secrets for userservice (admin password, OAuth client secret)"
+  kms_key_id              = var.kms_key_arn
+  recovery_window_in_days = 0
 
   tags = merge(local.common_tags, {
     Service = "userservice"
