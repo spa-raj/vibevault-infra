@@ -15,13 +15,13 @@ locals {
 resource "random_password" "userservice_db" {
   length           = 32
   special          = true
-  override_special = "!#$%&*()-_=+[]{}:?"
+  override_special = "!#%&*()-_=+:?"
 }
 
 resource "random_password" "productservice_db" {
   length           = 32
   special          = true
-  override_special = "!#$%&*()-_=+[]{}:?"
+  override_special = "!#%&*()-_=+:?"
 }
 
 resource "random_password" "userservice_admin" {
