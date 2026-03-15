@@ -50,6 +50,11 @@ variable "instance_count" {
   description = "Number of data nodes in the cluster"
   type        = number
   default     = 1
+
+  validation {
+    condition     = var.instance_count >= 1
+    error_message = "instance_count must be at least 1."
+  }
 }
 
 variable "ebs_volume_size" {

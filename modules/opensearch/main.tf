@@ -36,10 +36,14 @@ resource "aws_cloudwatch_log_resource_policy" "opensearch" {
         }
         Action = [
           "logs:PutLogEvents",
-          "logs:PutLogEventsBatch",
           "logs:CreateLogStream",
         ]
         Resource = "${aws_cloudwatch_log_group.opensearch.arn}:*"
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+        }
       }
     ]
   })
@@ -52,6 +56,17 @@ resource "aws_cloudwatch_log_resource_policy" "opensearch" {
 resource "aws_opensearch_domain" "main" {
   domain_name    = local.domain_name
   engine_version = var.engine_version
+
+  lifecycle {
+    precondition {
+      condition     = !var.multi_az || length(var.private_subnet_ids) >= 2
+      error_message = "At least 2 private subnet IDs are required when multi_az is enabled."
+    }
+    precondition {
+      condition     = !var.multi_az || (var.instance_count >= 2 && var.instance_count % 2 == 0)
+      error_message = "instance_count must be at least 2 and even when multi_az is enabled."
+    }
+  }
 
   cluster_config {
     instance_type          = var.instance_type
@@ -90,14 +105,14 @@ resource "aws_opensearch_domain" "main" {
     tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
   }
 
-  # Open access policy — access is controlled via VPC security group
+  # Restrict to HTTP actions only — network access is controlled via VPC security group
   access_policies = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
         Effect    = "Allow"
         Principal = "*"
-        Action    = "es:*"
+        Action    = "es:ESHttp*"
         Resource  = "arn:aws:es:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:domain/${local.domain_name}/*"
       }
     ]
