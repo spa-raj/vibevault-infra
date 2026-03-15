@@ -104,6 +104,12 @@ variable "ci_cd_role_arn" {
   default     = ""
 }
 
+variable "create_ci_cd_access_entry" {
+  description = "Whether to create the EKS access entry for CI/CD role. Set to false if it already exists outside Terraform."
+  type        = bool
+  default     = true
+}
+
 variable "control_plane_log_retention_days" {
   description = "Number of days to retain EKS control plane logs in CloudWatch"
   type        = number
