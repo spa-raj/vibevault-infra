@@ -114,6 +114,12 @@ output "opensearch_domain_name" {
   sensitive   = true
 }
 
+output "opensearch_domain_arn" {
+  description = "ARN of the OpenSearch domain"
+  value       = module.opensearch.domain_arn
+  sensitive   = true
+}
+
 # ECR Outputs
 
 output "ecr_repository_urls" {
