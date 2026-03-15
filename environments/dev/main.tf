@@ -33,6 +33,7 @@ module "eks" {
   endpoint_public_access_cidrs     = ["0.0.0.0/0"]
   control_plane_log_retention_days = 7
   ci_cd_role_arn                   = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/vibevault-github-actions"
+  create_ci_cd_access_entry        = false  # Access entry already exists outside Terraform
 
   secret_arns          = concat(module.secrets.all_secret_arns, [module.rds.master_user_secret_arn])
   secrets_kms_key_arns = [module.rds.kms_key_arn]
