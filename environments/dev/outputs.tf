@@ -100,6 +100,20 @@ output "external_secrets_role_arn" {
   sensitive   = true
 }
 
+# OpenSearch Outputs
+
+output "opensearch_endpoint" {
+  description = "HTTPS endpoint of the OpenSearch domain"
+  value       = module.opensearch.domain_endpoint
+  sensitive   = true
+}
+
+output "opensearch_domain_name" {
+  description = "Name of the OpenSearch domain"
+  value       = module.opensearch.domain_name
+  sensitive   = true
+}
+
 # ECR Outputs
 
 output "ecr_repository_urls" {

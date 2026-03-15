@@ -73,6 +73,26 @@ module "secrets" {
   kms_key_arn  = module.rds.kms_key_arn
 }
 
+module "opensearch" {
+  source = "../../modules/opensearch"
+
+  environment        = var.environment
+  project_name       = "vibevault"
+  vpc_id             = module.vpc.vpc_id
+  private_subnet_ids = module.vpc.private_subnet_ids
+
+  allowed_security_group_ids = [module.eks.cluster_security_group_id]
+
+  engine_version = "OpenSearch_2.17"
+  instance_type  = "t3.small.search"
+  instance_count = 1
+  ebs_volume_size = 10
+  ebs_volume_type = "gp3"
+
+  multi_az           = false
+  log_retention_days = 7
+}
+
 module "ecr" {
   source       = "../../modules/ecr"
   environment  = var.environment
