@@ -183,3 +183,10 @@ jobs:
           # Wait for job completion
           kubectl wait job/db-init -n vibevault --for=condition=complete --timeout=120s
           echo "DB init job completed successfully"
+
+      - name: Deploy Kafka (KRaft single-node)
+        run: |
+          kubectl apply -f k8s/kafka.yaml
+          echo "Waiting for Kafka to be ready..."
+          kubectl rollout status deployment/kafka -n vibevault --timeout=120s
+          echo "Kafka deployed successfully"
