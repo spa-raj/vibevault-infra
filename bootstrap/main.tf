@@ -111,6 +111,10 @@ variable "github_repos" {
     "spa-raj/vibevault-infra",
     "spa-raj/userservice",
     "spa-raj/productservice",
+    "spa-raj/cartservice",
+    "spa-raj/orderservice",
+    "spa-raj/paymentgateway",
+    "spa-raj/notificationservice",
   ]
 }
 
