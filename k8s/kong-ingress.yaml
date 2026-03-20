@@ -161,62 +161,6 @@ spec:
                 port:
                   number: 80
 
----
-# ============================================================
-# Health check routes (all services)
-# ============================================================
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: health-ingress
-  namespace: vibevault
-  annotations:
-    konghq.com/strip-path: "true"
-spec:
-  ingressClassName: kong
-  rules:
-    - host: vibevault.live
-      http:
-        paths:
-          - path: /health/userservice
-            pathType: Prefix
-            backend:
-              service:
-                name: userservice
-                port:
-                  number: 80
-          - path: /health/productservice
-            pathType: Prefix
-            backend:
-              service:
-                name: productservice
-                port:
-                  number: 80
-          - path: /health/cartservice
-            pathType: Prefix
-            backend:
-              service:
-                name: cartservice
-                port:
-                  number: 80
-          - path: /health/orderservice
-            pathType: Prefix
-            backend:
-              service:
-                name: orderservice
-                port:
-                  number: 80
-          - path: /health/paymentgateway
-            pathType: Prefix
-            backend:
-              service:
-                name: paymentgateway
-                port:
-                  number: 80
-          - path: /health/notificationservice
-            pathType: Prefix
-            backend:
-              service:
-                name: notificationservice
-                port:
-                  number: 80
+
+# Note: Health checks (/actuator/health) are accessible internally via ClusterIP services.
+# External health monitoring uses Kong's own LB health checks or kubectl.

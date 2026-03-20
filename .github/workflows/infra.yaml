@@ -198,8 +198,10 @@ jobs:
           helm upgrade --install kong kong/kong \
             -n kong --create-namespace \
             -f k8s/kong-values.yaml \
+            --version 2.47.0 \
             --wait --timeout 300s
           echo "Waiting for Kong LoadBalancer..."
+          LB_HOST=""
           for i in $(seq 1 30); do
             LB_HOST=$(kubectl get svc kong-kong-proxy -n kong -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "")
             if [ -n "$LB_HOST" ]; then
@@ -209,6 +211,10 @@ jobs:
             echo "  Waiting... ($i/30)"
             sleep 10
           done
+          if [ -z "$LB_HOST" ]; then
+            echo "ERROR: Kong LoadBalancer hostname not available after 5 minutes"
+            exit 1
+          fi
 
       - name: Apply Kong Ingress routes
         run: |
