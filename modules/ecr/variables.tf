@@ -17,7 +17,7 @@ variable "repository_names" {
     "product-service",
     "cart-service",
     "order-service",
-    "payment-service",
+    "payment-gateway",
     "notification-service",
   ]
 }
