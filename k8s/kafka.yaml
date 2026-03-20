@@ -81,24 +81,16 @@ spec:
               cpu: 500m
               memory: 1Gi
           readinessProbe:
-            exec:
-              command:
-                - kafka-topics
-                - --bootstrap-server
-                - localhost:9092
-                - --list
-            initialDelaySeconds: 30
-            periodSeconds: 15
-            timeoutSeconds: 10
+            tcpSocket:
+              port: 9092
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
             failureThreshold: 5
           livenessProbe:
-            exec:
-              command:
-                - kafka-topics
-                - --bootstrap-server
-                - localhost:9092
-                - --list
-            initialDelaySeconds: 60
+            tcpSocket:
+              port: 9092
+            initialDelaySeconds: 30
             periodSeconds: 30
-            timeoutSeconds: 10
-            failureThreshold: 3
+            timeoutSeconds: 5
+            failureThreshold: 5

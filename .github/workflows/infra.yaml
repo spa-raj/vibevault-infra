@@ -188,7 +188,7 @@ jobs:
         run: |
           kubectl apply -f k8s/kafka.yaml
           echo "Waiting for Kafka to be ready..."
-          kubectl rollout status deployment/kafka -n vibevault --timeout=120s
+          kubectl rollout status deployment/kafka -n vibevault --timeout=300s
           echo "Kafka deployed successfully"
 
       - name: Deploy Kong Ingress Controller
