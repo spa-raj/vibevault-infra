@@ -19,5 +19,7 @@ output "all_secret_arns" {
     aws_secretsmanager_secret.userservice_db.arn,
     aws_secretsmanager_secret.productservice_db.arn,
     aws_secretsmanager_secret.userservice_app.arn,
+    aws_secretsmanager_secret.orderservice_db.arn,
+    aws_secretsmanager_secret.paymentgateway_db.arn,
   ]
 }

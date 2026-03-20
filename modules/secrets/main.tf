@@ -114,3 +114,67 @@ resource "aws_secretsmanager_secret_version" "userservice_app" {
   })
 }
 
+# ------------------------------------------------------------------------------
+# Orderservice DB Credentials
+# ------------------------------------------------------------------------------
+
+resource "random_password" "orderservice_db" {
+  length           = 32
+  special          = true
+  override_special = "!#%&*()-_=+:?"
+}
+
+resource "aws_secretsmanager_secret" "orderservice_db" {
+  name                    = "${local.prefix}/orderservice/db-credentials"
+  description             = "Database credentials for orderservice"
+  kms_key_id              = var.kms_key_arn
+  recovery_window_in_days = 0
+
+  tags = merge(local.common_tags, {
+    Service = "orderservice"
+  })
+}
+
+resource "aws_secretsmanager_secret_version" "orderservice_db" {
+  secret_id = aws_secretsmanager_secret.orderservice_db.id
+  secret_string = jsonencode({
+    username = "orderservice_user"
+    password = random_password.orderservice_db.result
+  })
+}
+
+# ------------------------------------------------------------------------------
+# Paymentgateway DB Credentials
+# ------------------------------------------------------------------------------
+
+resource "random_password" "paymentgateway_db" {
+  length           = 32
+  special          = true
+  override_special = "!#%&*()-_=+:?"
+}
+
+resource "aws_secretsmanager_secret" "paymentgateway_db" {
+  name                    = "${local.prefix}/paymentgateway/db-credentials"
+  description             = "Database credentials for paymentgateway"
+  kms_key_id              = var.kms_key_arn
+  recovery_window_in_days = 0
+
+  tags = merge(local.common_tags, {
+    Service = "paymentgateway"
+  })
+}
+
+resource "aws_secretsmanager_secret_version" "paymentgateway_db" {
+  secret_id = aws_secretsmanager_secret.paymentgateway_db.id
+  secret_string = jsonencode({
+    username = "paymentgateway_user"
+    password = random_password.paymentgateway_db.result
+  })
+}
+
+# ------------------------------------------------------------------------------
+# Paymentgateway Razorpay Credentials
+# Created manually via AWS CLI or deploy workflow (not managed by Terraform)
+# aws secretsmanager create-secret --name "vibevault/dev/paymentgateway/razorpay-credentials" ...
+# ------------------------------------------------------------------------------
+
