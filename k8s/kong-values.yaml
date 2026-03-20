@@ -12,8 +12,15 @@ proxy:
     service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
     service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "${ACM_CERT_ARN}"
     service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "http"
   tls:
-    enabled: false
+    enabled: true
+    servicePort: 443
+    containerPort: 8000
+    parameters:
+      - port: 443
+        targetPort: 8000
+        protocol: TCP
   http:
     enabled: true
 
