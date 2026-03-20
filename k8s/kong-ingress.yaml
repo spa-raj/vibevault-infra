@@ -1,0 +1,222 @@
+---
+# Kong Ingress routes for all VibeVault microservices
+# Apply with: kubectl apply -f k8s/kong-ingress.yaml
+
+# ============================================================
+# User Service — OAuth2 auth server + user management
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: userservice-ingress
+  namespace: vibevault
+  annotations:
+    konghq.com/strip-path: "false"
+spec:
+  ingressClassName: kong
+  rules:
+    - host: vibevault.live
+      http:
+        paths:
+          - path: /auth
+            pathType: Prefix
+            backend:
+              service:
+                name: userservice
+                port:
+                  number: 80
+          - path: /oauth2
+            pathType: Prefix
+            backend:
+              service:
+                name: userservice
+                port:
+                  number: 80
+          - path: /login
+            pathType: Prefix
+            backend:
+              service:
+                name: userservice
+                port:
+                  number: 80
+          - path: /roles
+            pathType: Prefix
+            backend:
+              service:
+                name: userservice
+                port:
+                  number: 80
+
+---
+# ============================================================
+# Product Service — product catalog + search
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: productservice-ingress
+  namespace: vibevault
+  annotations:
+    konghq.com/strip-path: "false"
+spec:
+  ingressClassName: kong
+  rules:
+    - host: vibevault.live
+      http:
+        paths:
+          - path: /products
+            pathType: Prefix
+            backend:
+              service:
+                name: productservice
+                port:
+                  number: 80
+          - path: /categories
+            pathType: Prefix
+            backend:
+              service:
+                name: productservice
+                port:
+                  number: 80
+          - path: /search
+            pathType: Prefix
+            backend:
+              service:
+                name: productservice
+                port:
+                  number: 80
+
+---
+# ============================================================
+# Cart Service — shopping cart
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cartservice-ingress
+  namespace: vibevault
+  annotations:
+    konghq.com/strip-path: "false"
+spec:
+  ingressClassName: kong
+  rules:
+    - host: vibevault.live
+      http:
+        paths:
+          - path: /cart
+            pathType: Prefix
+            backend:
+              service:
+                name: cartservice
+                port:
+                  number: 80
+
+---
+# ============================================================
+# Order Service — order management + saga
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: orderservice-ingress
+  namespace: vibevault
+  annotations:
+    konghq.com/strip-path: "false"
+spec:
+  ingressClassName: kong
+  rules:
+    - host: vibevault.live
+      http:
+        paths:
+          - path: /orders
+            pathType: Prefix
+            backend:
+              service:
+                name: orderservice
+                port:
+                  number: 80
+
+---
+# ============================================================
+# Payment Gateway — Razorpay integration + webhooks
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: paymentgateway-ingress
+  namespace: vibevault
+  annotations:
+    konghq.com/strip-path: "false"
+spec:
+  ingressClassName: kong
+  rules:
+    - host: vibevault.live
+      http:
+        paths:
+          - path: /payments
+            pathType: Prefix
+            backend:
+              service:
+                name: paymentgateway
+                port:
+                  number: 80
+
+---
+# ============================================================
+# Health check routes (all services)
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: health-ingress
+  namespace: vibevault
+  annotations:
+    konghq.com/strip-path: "true"
+spec:
+  ingressClassName: kong
+  rules:
+    - host: vibevault.live
+      http:
+        paths:
+          - path: /health/userservice
+            pathType: Prefix
+            backend:
+              service:
+                name: userservice
+                port:
+                  number: 80
+          - path: /health/productservice
+            pathType: Prefix
+            backend:
+              service:
+                name: productservice
+                port:
+                  number: 80
+          - path: /health/cartservice
+            pathType: Prefix
+            backend:
+              service:
+                name: cartservice
+                port:
+                  number: 80
+          - path: /health/orderservice
+            pathType: Prefix
+            backend:
+              service:
+                name: orderservice
+                port:
+                  number: 80
+          - path: /health/paymentgateway
+            pathType: Prefix
+            backend:
+              service:
+                name: paymentgateway
+                port:
+                  number: 80
+          - path: /health/notificationservice
+            pathType: Prefix
+            backend:
+              service:
+                name: notificationservice
+                port:
+                  number: 80

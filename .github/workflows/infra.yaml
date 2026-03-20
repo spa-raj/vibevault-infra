@@ -190,3 +190,27 @@ jobs:
           echo "Waiting for Kafka to be ready..."
           kubectl rollout status deployment/kafka -n vibevault --timeout=120s
           echo "Kafka deployed successfully"
+
+      - name: Deploy Kong Ingress Controller
+        run: |
+          helm repo add kong https://charts.konghq.com
+          helm repo update
+          helm upgrade --install kong kong/kong \
+            -n kong --create-namespace \
+            -f k8s/kong-values.yaml \
+            --wait --timeout 300s
+          echo "Waiting for Kong LoadBalancer..."
+          for i in $(seq 1 30); do
+            LB_HOST=$(kubectl get svc kong-kong-proxy -n kong -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "")
+            if [ -n "$LB_HOST" ]; then
+              echo "Kong LoadBalancer: $LB_HOST"
+              break
+            fi
+            echo "  Waiting... ($i/30)"
+            sleep 10
+          done
+
+      - name: Apply Kong Ingress routes
+        run: |
+          kubectl apply -f k8s/kong-ingress.yaml
+          echo "Kong Ingress routes applied"

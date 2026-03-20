@@ -1,0 +1,25 @@
+# Kong Ingress Controller Helm values
+# Install with: helm install kong kong/kong -n kong --create-namespace -f k8s/kong-values.yaml
+
+ingressController:
+  installCRDs: false
+
+proxy:
+  type: LoadBalancer
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+
+env:
+  router_flavor: traditional
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
