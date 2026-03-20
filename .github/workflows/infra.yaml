@@ -193,6 +193,17 @@ jobs:
 
       - name: Deploy Kong Ingress Controller
         run: |
+          # Fetch ACM cert ARN for vibesvault.live
+          ACM_CERT_ARN=$(aws acm list-certificates --query "CertificateSummaryList[?DomainName=='www.vibesvault.live'].CertificateArn | [0]" --output text)
+          if [ -z "$ACM_CERT_ARN" ] || [ "$ACM_CERT_ARN" = "None" ]; then
+            echo "ERROR: ACM certificate for www.vibesvault.live not found"
+            exit 1
+          fi
+          echo "ACM Certificate: $ACM_CERT_ARN"
+
+          # Replace placeholder in kong-values.yaml
+          sed -i "s|\${ACM_CERT_ARN}|${ACM_CERT_ARN}|g" k8s/kong-values.yaml
+
           helm repo add kong https://charts.konghq.com
           helm repo update
           helm upgrade --install kong kong/kong \
