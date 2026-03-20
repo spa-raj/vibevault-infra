@@ -71,6 +71,8 @@ spec:
               value: "true"
             - name: CLUSTER_ID
               value: "MkU3OEVBNTcwNTJENDM2Qk"
+            - name: KAFKA_PORT
+              value: ""
           resources:
             requests:
               cpu: 250m
