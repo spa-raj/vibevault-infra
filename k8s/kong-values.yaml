@@ -1,5 +1,5 @@
 # Kong Ingress Controller Helm values
-# Install with: helm install kong kong/kong -n kong --create-namespace -f k8s/kong-values.yaml
+# NLB terminates TLS (port 443 → 80 on Kong), Kong handles HTTP only
 
 ingressController:
   installCRDs: false
@@ -10,19 +10,15 @@ proxy:
     service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
     service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
     service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
-    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "${ACM_CERT_ARN}"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "arn:aws:acm:ap-south-1:966392474277:certificate/70f59280-a21e-4a22-bf7e-97df58f9f288"
     service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
     service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "http"
   tls:
-    enabled: true
-    servicePort: 443
-    containerPort: 8000
-    parameters:
-      - port: 443
-        targetPort: 8000
-        protocol: TCP
+    enabled: false
   http:
     enabled: true
+    servicePort: 80
+    containerPort: 8000
 
 env:
   router_flavor: traditional

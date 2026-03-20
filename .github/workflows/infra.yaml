@@ -227,6 +227,27 @@ jobs:
             exit 1
           fi
 
+      - name: Add TLS listener to Kong NLB
+        run: |
+          NLB_DNS=$(kubectl get svc kong-kong-proxy -n kong -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          NLB_ARN=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?DNSName=='${NLB_DNS}'].LoadBalancerArn | [0]" --output text)
+          TG_ARN=$(aws elbv2 describe-listeners --load-balancer-arn "$NLB_ARN" --query "Listeners[0].DefaultActions[0].TargetGroupArn" --output text)
+          ACM_CERT_ARN=$(aws acm list-certificates --query "CertificateSummaryList[?DomainName=='www.vibesvault.live'].CertificateArn | [0]" --output text)
+
+          # Check if 443 listener already exists
+          EXISTING=$(aws elbv2 describe-listeners --load-balancer-arn "$NLB_ARN" --query "Listeners[?Port==\`443\`].ListenerArn | [0]" --output text)
+          if [ "$EXISTING" = "None" ] || [ -z "$EXISTING" ]; then
+            aws elbv2 create-listener \
+              --load-balancer-arn "$NLB_ARN" \
+              --protocol TLS \
+              --port 443 \
+              --certificates CertificateArn="$ACM_CERT_ARN" \
+              --default-actions Type=forward,TargetGroupArn="$TG_ARN"
+            echo "TLS listener created on port 443"
+          else
+            echo "TLS listener already exists"
+          fi
+
       - name: Apply Kong Ingress routes
         run: |
           kubectl apply -f k8s/kong-ingress.yaml
