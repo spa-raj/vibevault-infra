@@ -15,7 +15,7 @@ metadata:
 spec:
   ingressClassName: kong
   rules:
-    - host: vibesvault.live
+    - host: www.vibesvault.live
       http:
         paths:
           - path: /auth
@@ -61,7 +61,7 @@ metadata:
 spec:
   ingressClassName: kong
   rules:
-    - host: vibesvault.live
+    - host: www.vibesvault.live
       http:
         paths:
           - path: /products
@@ -100,7 +100,7 @@ metadata:
 spec:
   ingressClassName: kong
   rules:
-    - host: vibesvault.live
+    - host: www.vibesvault.live
       http:
         paths:
           - path: /cart
@@ -125,7 +125,7 @@ metadata:
 spec:
   ingressClassName: kong
   rules:
-    - host: vibesvault.live
+    - host: www.vibesvault.live
       http:
         paths:
           - path: /orders
@@ -150,7 +150,7 @@ metadata:
 spec:
   ingressClassName: kong
   rules:
-    - host: vibesvault.live
+    - host: www.vibesvault.live
       http:
         paths:
           - path: /payments
