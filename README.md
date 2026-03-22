@@ -47,6 +47,42 @@ Stage 4: OpenSearch + Full apply
 
 NotificationService is not exposed — it is a Kafka consumer only.
 
+## Prerequisites
+
+- [Terraform](https://www.terraform.io/) >= 1.9
+- [AWS CLI](https://aws.amazon.com/cli/) v2, configured with appropriate credentials
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) for K8s manifest management
+- [Helm](https://helm.sh/) >= 3.0 for Kong deployment
+- An AWS account with permissions for EKS, RDS, ECR, Secrets Manager, KMS, OpenSearch, SES, ACM
+
+### Manual Setup
+
+```bash
+# 1. Bootstrap (one-time) — creates S3 state bucket + DynamoDB lock table
+cd bootstrap && terraform init && terraform apply
+
+# 2. Infrastructure (staged)
+cd environments/dev
+terraform init
+terraform apply -target=module.vpc -target=module.ecr          # Stage 1
+terraform apply -target=module.eks                              # Stage 2
+terraform apply -target=module.rds -target=module.secrets       # Stage 3
+terraform apply                                                 # Stage 4 (full)
+
+# 3. Post-apply K8s setup
+aws eks update-kubeconfig --name vibevault-dev --region ap-south-1
+kubectl apply -f k8s/                                           # Kafka, ExternalSecrets, DB init
+helm upgrade --install kong kong/kong -n kong --create-namespace -f k8s/kong-values.yaml
+```
+
+### Terraform State Backend
+
+| Resource | Name | Region |
+|---|---|---|
+| S3 Bucket | `vibevault-terraform-state` | ap-south-1 |
+| DynamoDB Table | `vibevault-terraform-locks` | ap-south-1 |
+| State Key | `dev/terraform.tfstate` | — |
+
 ## CI/CD
 
 GitHub Actions workflow (`infra.yaml`) supports:
