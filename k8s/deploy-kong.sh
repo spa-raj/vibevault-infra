@@ -5,6 +5,7 @@
 # Prerequisites:
 #   - kubectl configured for EKS cluster
 #   - helm installed
+#   - ACM_CERT_ARN set to the ACM certificate ARN for the NLB TLS listener
 #
 # Usage:
 #   ./k8s/deploy-kong.sh
@@ -13,6 +14,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+: "${ACM_CERT_ARN:?Set ACM_CERT_ARN to the ACM certificate ARN}"
+VALUES_FILE="$(mktemp)"
+trap 'rm -f "$VALUES_FILE"' EXIT
+sed "s|\${ACM_CERT_ARN}|${ACM_CERT_ARN}|g" "$SCRIPT_DIR/kong-values.yaml" > "$VALUES_FILE"
 
 echo "=== Step 1: Add Kong Helm repo ==="
 helm repo add kong https://charts.konghq.com
@@ -22,7 +27,7 @@ echo ""
 echo "=== Step 2: Install Kong Ingress Controller ==="
 helm upgrade --install kong kong/kong \
   -n kong --create-namespace \
-  -f "$SCRIPT_DIR/kong-values.yaml" \
+  -f "$VALUES_FILE" \
   --version 2.47.0 \
   --wait --timeout 300s
 
