@@ -72,7 +72,9 @@ terraform apply                                                 # Stage 4 (full)
 # 3. Post-apply K8s setup
 aws eks update-kubeconfig --name vibevault-dev --region ap-south-1
 kubectl apply -f k8s/                                           # Kafka, ExternalSecrets, DB init
-helm upgrade --install kong kong/kong -n kong --create-namespace -f k8s/kong-values.yaml
+export ACM_CERT_ARN=$(aws acm list-certificates --region ap-south-1 \
+  --query "CertificateSummaryList[?DomainName=='www.vibesvault.live'].CertificateArn | [0]" --output text)
+./k8s/deploy-kong.sh                                            # Kong + ingress routes
 ```
 
 ### Terraform State Backend
